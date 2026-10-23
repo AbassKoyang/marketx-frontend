@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "skills": {
+    "apple-design": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/apple-design/SKILL.md",
+      "computedHash": "f3f1d2cbc8f3e79ccddff05f4e42d34d995f057fb30ff670e4edf8c87d568b69"
+    },
+    "emil-design-eng": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/emil-design-eng/SKILL.md",
+      "computedHash": "77853cec799207f80868c611374c6ed5fdf34a55355c5ab544b59e791c63ad98"
+    },
+    "ios-design": {
+      "source": "uizze.sh",
+      "sourceUrl": "https://uizze.sh/",
+      "sourceType": "well-known",
+      "computedHash": "5db10aea0f95d69a54cabcfae129ea0e7069b7022de967b2a04acdd9fa1be050",
+      "wellKnownDigest": "sha256:8db9f7cafeda65751e88fcbc1c9e4fc3f93803a438c30fe8e3fc8b00773417bd"
+    },
+    "ui-taste": {
+      "source": "uizze.sh",
+      "sourceUrl": "https://uizze.sh/",
+      "sourceType": "well-known",
+      "computedHash": "b9d9f1f68d2db3316639cf77ad74dae34a2ed2ffb90845e5de6c592095c78a3d",
+      "wellKnownDigest": "sha256:120fd3e899db255454fff61b7e8c22757524ffe31101a22d19346708bd20c4b9"
+    }
+  }
+}
