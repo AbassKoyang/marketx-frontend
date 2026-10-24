@@ -46,14 +46,7 @@ export function AuthView({
         <GoogleSignIn next={destination} mode={mode} />
       </div>
 
-      <div className="mt-10 rounded-xl border border-border/80 bg-surface/60 p-4">
-        <p className="text-xs leading-5 text-muted-foreground">
-          MarketX uses Google to secure your account. We never post on your
-          behalf.
-        </p>
-      </div>
-
-      <p className="mt-8 text-center text-sm text-muted-foreground">
+      <p className="mt-16 text-center text-sm text-muted-foreground">
         {isLogin ? (
           <>
             New to MarketX?{" "}

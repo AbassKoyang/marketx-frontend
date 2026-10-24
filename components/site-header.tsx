@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -159,6 +160,7 @@ function AccountMenu() {
           size="sm"
           render={<Link href="/login" />}
           nativeButton={false}
+          className={"hidden sm:inline-flex"}
         >
           Sign in
         </Button>
@@ -188,14 +190,16 @@ function AccountMenu() {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60 p-1.5">
-        <DropdownMenuLabel className="px-2.5 py-2">
-          <span className="block truncate text-sm font-medium text-foreground">
-            {fullName(user)}
-          </span>
-          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-            {user.email}
-          </span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="px-2.5 py-2">
+            <span className="block truncate text-sm font-medium text-foreground">
+              {fullName(user)}
+            </span>
+            <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+              {user.email}
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {accountLinks.map((item) => (
           <DropdownMenuItem

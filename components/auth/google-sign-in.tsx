@@ -69,6 +69,7 @@ export function GoogleSignIn({
           router.refresh()
         },
         onError: (error) => {
+          console.log(error)
           toast.error(errorMessage(error, "Google sign-in failed."))
         },
       })

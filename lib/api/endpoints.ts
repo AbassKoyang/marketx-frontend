@@ -48,79 +48,73 @@ export type PageParams = {
 
 export const api = {
   auth: {
-    google: (token: string) =>
-      request<AuthMessage>("/auth/google/", {
-        method: "POST",
-        body: JSON.stringify({ token }),
-      }),
-    logout: () =>
-      request<AuthMessage>("/auth/logout/", {
-        method: "POST",
-        body: "{}",
-      }),
-    me: () => request<UserProfile>("/auth/me/"),
-    onboard: (payload: OnboardingPayload) =>
-      request<UserProfile>("/auth/onboard/", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
-    updateProfile: (id: number, payload: UpdateProfilePayload) =>
-      request<UserProfile>(`/auth/update/${id}/`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      }),
+    google: (token: string) => 
+      request<AuthMessage>({ url: "/auth/google/", method: "POST", data: { token } }),
+    
+    logout: () => 
+      request<AuthMessage>({ url: "/auth/logout/", method: "POST" }),
+    
+    me: () => 
+      request<UserProfile>({ url: "/auth/me/" }),
+    
+    onboard: (data: OnboardingPayload) => 
+      request<UserProfile>({ url: "/auth/onboard/", method: "POST", data }),
+    
+    updateProfile: (id: number, data: UpdateProfilePayload) => 
+      request<UserProfile>({ url: `/auth/update/${id}/`, method: "PATCH", data }),
   },
 
   markets: {
-    list: (params: MarketListParams = {}) =>
-      request<PaginatedResponse<Market>>(`/markets/${queryString(params)}`),
-    detail: (slug: string) =>
-      request<Market>(`/markets/${encodeURIComponent(slug)}/`),
-    stats: (slug: string) =>
-      request<MarketStats>(`/markets/${encodeURIComponent(slug)}/stats/`),
-    categories: () =>
-      request<PaginatedResponse<MarketCategory>>("/categories/"),
-    category: (slug: string) =>
-      request<MarketCategory>(`/categories/${encodeURIComponent(slug)}/`),
-    history: (outcomeId: number, range: PriceHistoryRange) =>
-      request<PriceHistoryResponse>(
-        `/outcomes/${outcomeId}/history/?${queryString({ range, limit: 1000 })}`
-      ),
+    list: (params = {}) => 
+      request<PaginatedResponse<Market>>({ url: "/markets/", params }),
+    
+    detail: (slug: string) => 
+      request<Market>({ url: `/markets/${slug}/` }),
+    
+    stats: (slug: string) => 
+      request<MarketStats>({ url: `/markets/${slug}/stats/` }),
+    
+    categories: () => 
+      request<PaginatedResponse<MarketCategory>>({ url: "/categories/" }),
+    
+    category: (slug: string) => 
+      request<MarketCategory>({ url: `/categories/${slug}/` }),
+    
+    history: (outcomeId: number, range: PriceHistoryRange) => 
+      request<PriceHistoryResponse>({ url: `/outcomes/${outcomeId}/history/`, params: { range, limit: 1000 } }),
   },
 
   trading: {
-    orders: (params: PageParams & { outcome?: number; active?: boolean; status?: string } = {}) =>
-      request<PaginatedResponse<Order>>(`/trading/orders/${queryString(params)}`),
-    submitOrder: (payload: SubmitOrderPayload) =>
-      request<Order>("/trading/orders/", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
-    cancelOrder: (id: number) =>
-      request<Order>(`/trading/orders/${id}/`, { method: "DELETE" }),
-    trades: (params: PageParams & { outcome?: number; mine?: boolean } = {}) =>
-      request<PaginatedResponse<Trade>>(`/trading/trades/${queryString(params)}`),
-    positions: (params: PageParams & { outcome?: number } = {}) =>
-      request<PaginatedResponse<Position>>(
-        `/trading/positions/${queryString(params)}`
-      ),
-    positionSummary: () =>
-      request<PositionSummary>("/trading/positions/summary/"),
-    orderBook: (outcomeId: number, limit = 20) =>
-      request<OrderBook>(
-        `/trading/order-books/${outcomeId}/?${queryString({ limit })}`
-      ),
-    activity: (params: PageParams & { outcome?: number } = {}) =>
-      request<PaginatedResponse<ActivityEvent>>(
-        `/trading/activity/${queryString(params)}`
-      ),
+    orders: (params = {}) => 
+      request<PaginatedResponse<Order>>({ url: "/trading/orders/", params }),
+    
+    submitOrder: (data: SubmitOrderPayload) => 
+      request<Order>({ url: "/trading/orders/", method: "POST", data }),
+    
+    cancelOrder: (id: number) => 
+      request<Order>({ url: `/trading/orders/${id}/`, method: "DELETE" }),
+    
+    trades: (params = {}) => 
+      request<PaginatedResponse<Trade>>({ url: "/trading/trades/", params }),
+    
+    positions: (params = {}) => 
+      request<PaginatedResponse<Position>>({ url: "/trading/positions/", params }),
+    
+    positionSummary: () => 
+      request<PositionSummary>({ url: "/trading/positions/summary/" }),
+    
+    orderBook: (outcomeId: number, limit = 20) => 
+      request<OrderBook>({ url: `/trading/order-books/${outcomeId}/`, params: { limit } }),
+    
+    activity: (params = {}) => 
+      request<PaginatedResponse<ActivityEvent>>({ url: "/trading/activity/", params }),
   },
 
   wallet: {
-    detail: () => request<Wallet>("/wallet/"),
-    ledger: (params: PageParams = {}) =>
-      request<PaginatedResponse<WalletLedgerEntry>>(
-        `/wallet/ledger/${queryString(params)}`
-      ),
+    detail: () => 
+      request<Wallet>({ url: "/wallet/" }),
+    
+    ledger: (params = {}) => 
+      request<PaginatedResponse<WalletLedgerEntry>>({ url: "/wallet/ledger/", params }),
   },
-}
+};

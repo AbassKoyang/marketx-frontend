@@ -190,7 +190,7 @@ export function MarketsBrowser({
         </div>
 
         {categories.data && categories.data.results.length > 0 ? (
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="hidden mt-4 lg:flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button
               type="button"
               onClick={() => {
@@ -255,7 +255,7 @@ export function MarketsBrowser({
           />
         ) : null}
 
-        {markets.isSuccess && items.length === 0 ? (
+        {markets.isSuccess && items && items.length === 0 ? (
           <EmptyState
             icon={ChartLineData01Icon}
             title={filtersActive ? "No markets match" : "No markets yet"}
@@ -274,7 +274,7 @@ export function MarketsBrowser({
           />
         ) : null}
 
-        {items.length > 0 ? (
+        {items && items.length > 0 ? (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((market) => (

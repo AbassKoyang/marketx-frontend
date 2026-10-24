@@ -102,7 +102,7 @@ export function ProfileView() {
       <PageHeader
         eyebrow="Account"
         title="Profile"
-        description="How you appear across MarketX, and the sign-in account connected to your profile."
+        description="How you appear across MarketX."
       />
 
       <AccountSettingsNav className="mt-6" />
