@@ -69,7 +69,7 @@ export function ActivityView() {
         <p className="text-xs text-muted-foreground">
           {isAuthenticated
             ? "Your private events are marked You. Public events are anonymous."
-            : "Public events are anonymous. Only matched trades are shown publicly."}
+            : "Public events are anonymous. Only executed trades are shown publicly."}
         </p>
 
       </div>

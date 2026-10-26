@@ -15,14 +15,18 @@ import type {
   MarketOutcome,
   Order,
   OrderSide,
+  SubmitOrderPayload,
 } from "@/lib/api/types"
 import {
   formatCreditValue,
   formatCredits,
+  formatOrderCap,
   formatOrderStatus,
+  formatProbability,
   formatQuantity,
   formatSide,
   formatTicksPercent,
+  orderIsActive,
   parseDecimalInput,
 } from "@/lib/format"
 import {
@@ -30,9 +34,11 @@ import {
   useCancelOrder,
   useOrders,
   usePositions,
+  useQuote,
   useSubmitOrder,
   useWallet,
 } from "@/lib/query/hooks"
+import type { QuoteParams } from "@/lib/api/endpoints"
 import { flattenPages } from "@/lib/query/pagination"
 import { cn } from "@/lib/utils"
 
@@ -52,6 +58,19 @@ function sanitizePrice(value: string): string {
 
 function sanitizeQuantity(value: string): string {
   return value.replace(/\D/g, "").slice(0, 9)
+}
+
+type OrderType = "market" | "limit"
+
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = React.useState(value)
+
+  React.useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delay)
+    return () => window.clearTimeout(timer)
+  }, [value, delay])
+
+  return debounced
 }
 
 export function TradePanel({
@@ -79,10 +98,9 @@ export function TradePanel({
   const submit = useSubmitOrder()
   const cancel = useCancelOrder()
 
-  const initialPrice =
-    outcome.latest_price !== null ? String(outcome.latest_price / 100) : ""
   const [side, setSide] = React.useState<OrderSide>("buy")
-  const [price, setPrice] = React.useState(initialPrice)
+  const [orderType, setOrderType] = React.useState<OrderType>("market")
+  const [price, setPrice] = React.useState("")
   const [quantity, setQuantity] = React.useState("")
   const [formError, setFormError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState<string | null>(null)
@@ -90,7 +108,7 @@ export function TradePanel({
 
   React.useEffect(() => {
     clientOrderId.current = newClientOrderId()
-  }, [outcome.id, side, price, quantity])
+  }, [outcome.id, side, orderType, price, quantity])
 
   const position = flattenPages(positions.data?.pages).find(
     (item) => item.outcome === outcome.id
@@ -99,21 +117,78 @@ export function TradePanel({
     ? Math.max(position.quantity - position.reserved_quantity, 0)
     : 0
   const availableCredits = wallet.data?.available_balance
-  const activeOrders = flattenPages(orders.data?.pages)
+  const activeOrders = flattenPages(orders.data?.pages).filter(orderIsActive)
 
   const percent = parseDecimalInput(price)
   const ticks = percent === null ? null : Math.round(percent * 100)
   const quantityValue = Number.parseInt(quantity, 10)
-  const validQuantity = Number.isFinite(quantityValue) && quantityValue > 0
+  const validQuantity =
+    Number.isFinite(quantityValue) && quantityValue > 0 && quantityValue <= 1_000_000
   const validPrice =
     percent !== null && percent >= 0.01 && percent <= 99.99 && ticks !== null
-  const estimatedMinor =
-    validPrice && validQuantity && ticks !== null ? ticks * quantityValue : null
+  const limitTicks = orderType === "limit" && validPrice ? ticks : undefined
+
+  const quoteInput = React.useMemo<QuoteParams>(
+    () => ({
+      outcome: outcome.id,
+      side,
+      quantity: validQuantity ? quantityValue : 0,
+      ...(limitTicks !== undefined ? { limit_price: limitTicks } : {}),
+    }),
+    [outcome.id, side, validQuantity, quantityValue, limitTicks]
+  )
+  const debouncedQuoteInput = useDebouncedValue(quoteInput, 350)
+  const quoteEnabled =
+    auth.isAuthenticated &&
+    isTradingOpen &&
+    outcome.is_active &&
+    validQuantity &&
+    (orderType === "market" || validPrice)
+  const quote = useQuote(debouncedQuoteInput, quoteEnabled)
+  const quoteIsCurrent = debouncedQuoteInput === quoteInput
+  const quoteData =
+    quoteEnabled && quoteIsCurrent && !quote.isPlaceholderData
+      ? quote.data
+      : undefined
+  const quoteError =
+    quoteEnabled && quoteIsCurrent && quote.isError
+      ? errorMessage(quote.error, "We couldn’t price this order.")
+      : null
+  const quoteUpdating = quoteEnabled && (!quoteData || quote.isFetching)
+  const fillableQuantity = quoteData?.fillable_quantity ?? null
+  const priceAfter =
+    quoteData !== null && quoteData !== undefined
+      ? (quoteData.prices_after[String(outcome.id)] ?? null)
+      : null
+  const limitedByCopy = quoteData?.limited_by
+    ? {
+        limit: "Your slippage cap limits how much can fill.",
+        balance: "Your available credits limit how much can fill.",
+        position: "You do not hold enough contracts for this order.",
+        liquidity: "Market-maker liquidity limits how much can fill.",
+      }[quoteData.limited_by]
+    : null
+  const partiallyFillable =
+    quoteData !== null && quoteData !== undefined
+      ? quoteData.fillable_quantity < quoteData.requested_quantity
+      : false
+  const canSubmit =
+    quoteData !== undefined &&
+    quoteData !== null &&
+    quoteData.fillable_quantity > 0 &&
+    !quoteUpdating &&
+    !submit.isPending
 
   const canCancel = !cancel.isPending
 
   function changeSide(nextSide: OrderSide) {
     setSide(nextSide)
+    setFormError(null)
+    setSuccess(null)
+  }
+
+  function changeOrderType(nextType: OrderType) {
+    setOrderType(nextType)
     setFormError(null)
     setSuccess(null)
   }
@@ -127,73 +202,76 @@ export function TradePanel({
       setFormError("This market is not accepting orders.")
       return
     }
-    if (!validPrice || ticks === null) {
-      setFormError("Enter a limit price between 0.01% and 99.99%.")
-      return
-    }
     if (!validQuantity) {
-      setFormError("Enter a whole number of contracts.")
+      setFormError("Enter a whole number of contracts between 1 and 1,000,000.")
       return
     }
-    if (quantityValue > 1_000_000) {
-      setFormError("Order size cannot exceed 1,000,000 contracts.")
+    if (orderType === "limit" && !validPrice) {
+      setFormError("Enter a slippage cap between 0.01% and 99.99%.")
       return
     }
-    if (
-      side === "buy" &&
-      availableCredits !== undefined &&
-      estimatedMinor !== null &&
-      estimatedMinor > availableCredits
-    ) {
+    if (!quoteData) {
+      setFormError("Wait for the quote to finish before submitting your order.")
+      return
+    }
+    if (quoteData.fillable_quantity === 0) {
       setFormError(
-        `This order needs ${formatCredits(estimatedMinor)} but only ${formatCredits(
-          availableCredits
-        )} are available.`
-      )
-      return
-    }
-    if (side === "sell" && quantityValue > availableContracts) {
-      setFormError(
-        availableContracts > 0
-          ? `You can sell up to ${formatQuantity(availableContracts)} contracts.`
-          : "You have no unreserved contracts to sell."
+        "This order cannot fill right now. Adjust the quantity or slippage cap."
       )
       return
     }
 
-    submit.mutate(
-      {
-        outcome: outcome.id,
-        side,
-        limit_price: ticks,
-        quantity: quantityValue,
-        client_order_id: clientOrderId.current || newClientOrderId(),
-      },
-      {
-        onSuccess: (order, variables) => {
-          const verb =
-            order.status === "filled"
-              ? "filled"
-              : order.status === "partially_filled"
-                ? "partially filled"
-                : "resting"
+    const submittedQuote = quoteData
+    const payload: SubmitOrderPayload = {
+      outcome: outcome.id,
+      side,
+      quantity: quantityValue,
+      client_order_id: clientOrderId.current || newClientOrderId(),
+    }
+    if (orderType === "limit" && ticks !== null) {
+      payload.limit_price = ticks
+    }
+
+    submit.mutate(payload, {
+      onSuccess: (order) => {
+        const filled = order.filled_quantity
+        const requested = order.original_quantity
+        const cash = formatCredits(submittedQuote.notional)
+        const priceText =
+          submittedQuote.average_price_decimal === null
+            ? ""
+            : ` at ${formatProbability(submittedQuote.average_price_decimal, 1)}`
+
+        if (order.status === "partially_filled" || filled < requested) {
           setSuccess(
-            `${formatSide(variables.side)} ${formatQuantity(
-              variables.quantity
-            )} @ ${formatTicksPercent(variables.limit_price, 1)} — ${verb}.`
+            `${formatQuantity(filled)} of ${formatQuantity(requested)} ${
+              outcome.name
+            } filled${priceText} · ${cash}. The unfilled remainder was cancelled.`
           )
-          setQuantity("")
-          toast.success(
-            order.status === "filled" ? "Order filled" : "Order placed"
+          toast.success("Order partially filled")
+        } else if (order.status === "filled") {
+          setSuccess(
+            `${formatSide(side)} ${formatQuantity(filled)} ${
+              outcome.name
+            }${priceText} · ${cash}.`
           )
-        },
-        onError: (error) => {
-          const message = errorMessage(error, "We couldn’t place your order.")
-          setFormError(message)
-          toast.error(message)
-        },
-      }
-    )
+          toast.success("Order filled")
+        } else {
+          setSuccess(
+            `${formatSide(side)} ${formatQuantity(
+              requested
+            )} ${outcome.name} — ${formatOrderStatus(order.status)}.`
+          )
+          toast.success("Order submitted")
+        }
+        setQuantity("")
+      },
+      onError: (error) => {
+        const message = errorMessage(error, "We couldn’t place your order.")
+        setFormError(message)
+        toast.error(message)
+      },
+    })
   }
 
   return (
@@ -217,9 +295,9 @@ export function TradePanel({
           </div>
           <div className="text-end">
             <p className="tabular font-heading text-2xl font-medium tracking-[-0.03em]">
-              {formatTicksPercent(outcome.latest_price, 1)}
+              {formatTicksPercent(outcome.current_price, 1)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Last price</p>
+            <p className="text-[10px] text-muted-foreground">Current price</p>
           </div>
         </div>
       </div>
@@ -248,7 +326,7 @@ export function TradePanel({
         <div className="px-5 py-7 text-center">
           <p className="text-sm font-medium">Sign in to trade</p>
           <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-muted-foreground">
-            Use your Google account to place a limit order.
+            Use your Google account to place an order.
           </p>
           <Button
             className="mt-5 w-full"
@@ -281,50 +359,74 @@ export function TradePanel({
             ))}
           </div>
 
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/80 p-1">
+            {(["market", "limit"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => changeOrderType(option)}
+                aria-pressed={orderType === option}
+                className={cn(
+                  "h-8 rounded-md text-xs font-medium transition-[background-color,color,box-shadow] duration-150",
+                  orderType === option
+                    ? "bg-background text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.06)]"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {option === "market" ? "Market" : "Limit"}
+              </button>
+            ))}
+          </div>
+
           <p className="text-[11px] leading-5 text-muted-foreground">
             {side === "buy"
               ? "Buy contracts if you think this outcome will resolve true."
-              : "Sell contracts you already hold. Reserved contracts can’t be sold."}
+              : "Sell contracts you already hold."}{" "}
+            {orderType === "market"
+              ? "Market orders execute immediately at the market-maker price."
+              : "Limit orders execute immediately or cancel the unfilled remainder."}
           </p>
 
-          <div className="space-y-1.5">
-            <label
-              htmlFor={`limit-price-${outcome.id}`}
-              className="flex items-center justify-between text-sm font-medium"
-            >
-              <span>Limit price</span>
-              <span className="text-[11px] font-normal text-muted-foreground">
-                0.01%–99.99%
-              </span>
-            </label>
-            <div className="relative">
-              <Input
-                id={`limit-price-${outcome.id}`}
-                inputMode="decimal"
-                autoComplete="off"
-                value={price}
-                onChange={(event) => {
-                  setPrice(sanitizePrice(event.target.value))
-                  setFormError(null)
-                  setSuccess(null)
-                }}
-                placeholder="e.g. 50"
-                className="tabular pe-8"
-                aria-describedby={`limit-price-help-${outcome.id}`}
-              />
-              <span className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                %
-              </span>
+          {orderType === "limit" ? (
+            <div className="space-y-1.5">
+              <label
+                htmlFor={`limit-price-${outcome.id}`}
+                className="flex items-center justify-between text-sm font-medium"
+              >
+                <span>Slippage cap</span>
+                <span className="text-[11px] font-normal text-muted-foreground">
+                  0.01%–99.99%
+                </span>
+              </label>
+              <div className="relative">
+                <Input
+                  id={`limit-price-${outcome.id}`}
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={price}
+                  onChange={(event) => {
+                    setPrice(sanitizePrice(event.target.value))
+                    setFormError(null)
+                    setSuccess(null)
+                  }}
+                  placeholder="e.g. 55"
+                  className="tabular pe-8"
+                  aria-describedby={`limit-price-help-${outcome.id}`}
+                />
+                <span className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  %
+                </span>
+              </div>
+              <p
+                id={`limit-price-help-${outcome.id}`}
+                className="text-[11px] text-muted-foreground"
+              >
+                {side === "buy"
+                  ? "The highest average price you will accept. It is a cap, not the expected price."
+                  : "The lowest average price you will accept. It is a cap, not the expected price."}
+              </p>
             </div>
-            <p
-              id={`limit-price-help-${outcome.id}`}
-              className="text-[11px] text-muted-foreground"
-            >
-              {side === "buy"
-                ? "You will not pay more than this price per contract."
-                : "You will not receive less than this price per contract."}
-            </p>
-          </div>
+          ) : null}
 
           <div className="space-y-1.5">
             <label
@@ -353,16 +455,42 @@ export function TradePanel({
 
           <div className="space-y-2 rounded-lg bg-surface px-3.5 py-3 text-xs">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="text-muted-foreground">
-                {side === "buy" ? "Maximum cost" : "Minimum proceeds"}
-              </span>
+              <span className="text-muted-foreground">Fillable</span>
               <span className="tabular font-medium">
-                {estimatedMinor === null
+                {!validQuantity
                   ? "—"
-                  : formatCredits(estimatedMinor)}
+                  : quoteData
+                    ? `${formatQuantity(fillableQuantity)} of ${formatQuantity(
+                        quoteData.requested_quantity
+                      )}`
+                    : quoteUpdating
+                      ? "Calculating…"
+                      : "—"}
               </span>
             </div>
             <div className="flex items-baseline justify-between gap-3">
+              <span className="text-muted-foreground">
+                {side === "buy" ? "Estimated cost" : "Estimated proceeds"}
+              </span>
+              <span className="tabular font-medium">
+                {quoteData ? formatCredits(quoteData.notional) : "—"}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-muted-foreground">Average price</span>
+              <span className="tabular font-medium">
+                {quoteData && quoteData.average_price_decimal !== null
+                  ? formatProbability(quoteData.average_price_decimal, 1)
+                  : "—"}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-muted-foreground">Price after fill</span>
+              <span className="tabular font-medium">
+                {priceAfter === null ? "—" : formatTicksPercent(priceAfter, 1)}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between gap-3 border-t border-border/60 pt-2">
               <span className="text-muted-foreground">
                 {side === "buy" ? "Available credits" : "Available contracts"}
               </span>
@@ -375,6 +503,33 @@ export function TradePanel({
               </span>
             </div>
           </div>
+
+          {quoteError ? (
+            <p role="alert" className="text-xs leading-5 text-destructive">
+              {quoteError}
+            </p>
+          ) : null}
+
+          {limitedByCopy ? (
+            <p className="text-xs leading-5 text-muted-foreground">
+              {limitedByCopy}
+            </p>
+          ) : null}
+
+          {partiallyFillable && fillableQuantity !== null && fillableQuantity > 0 ? (
+            <p className="text-xs leading-5 text-muted-foreground">
+              Only {formatQuantity(fillableQuantity)} of{" "}
+              {formatQuantity(quoteData?.requested_quantity ?? 0)} contracts can
+              fill. The unfilled remainder will be cancelled immediately.
+            </p>
+          ) : null}
+
+          {quoteData && quoteData.fillable_quantity === 0 ? (
+            <p className="text-xs leading-5 text-destructive">
+              This order cannot fill right now. Adjust the quantity or slippage
+              cap.
+            </p>
+          ) : null}
 
           {formError ? (
             <p role="alert" className="text-xs leading-5 text-destructive">
@@ -392,7 +547,7 @@ export function TradePanel({
             type="submit"
             size="lg"
             className="w-full"
-            disabled={submit.isPending}
+            disabled={!canSubmit}
           >
             {submit.isPending ? (
               <>
@@ -403,6 +558,8 @@ export function TradePanel({
                 />
                 Placing order…
               </>
+            ) : quoteUpdating && validQuantity ? (
+              "Pricing order…"
             ) : (
               <span className="truncate">
                 {formatSide(side)} {outcome.name}
@@ -411,8 +568,8 @@ export function TradePanel({
           </Button>
 
           <p className="text-center text-[10px] leading-4 text-muted-foreground/80">
-            Orders rest until matched. Fills never occur at a worse price than
-            your limit.
+            Quotes refresh automatically. Orders execute immediately; a
+            partially fillable order cancels its unfilled remainder.
           </p>
         </form>
       )}
@@ -503,7 +660,7 @@ function OpenOrders({
 
       {!isLoading && !isError && orders.length === 0 ? (
         <p className="mt-3 text-xs leading-5 text-muted-foreground">
-          No resting orders for this outcome.
+          No open orders. New orders execute immediately and never rest.
         </p>
       ) : null}
 
@@ -515,18 +672,15 @@ function OpenOrders({
                 <p className="text-xs">
                   <span className="font-medium">{formatSide(order.side)}</span>{" "}
                   <span className="tabular text-muted-foreground">
-                    {formatTicksPercent(order.limit_price, 1)}
+                    {formatOrderCap(order)}
                   </span>{" "}
                   <span className="tabular text-muted-foreground">
                     × {formatQuantity(order.remaining_quantity)}
                   </span>
                 </p>
                 <p className="mt-0.5 text-[10px] text-muted-foreground">
-                  {order.status === "partially_filled"
-                    ? `${formatOrderStatus(order.status)} · ${formatQuantity(
-                        order.filled_quantity
-                      )} filled`
-                    : `${formatQuantity(order.remaining_quantity)} remaining`}
+                  {formatOrderStatus(order.status)} ·{" "}
+                  {formatQuantity(order.filled_quantity)} filled
                 </p>
               </div>
               <Button

@@ -21,10 +21,11 @@ import { errorMessage } from "@/lib/api/client"
 import type { Order } from "@/lib/api/types"
 import {
   formatDateTime,
+  formatOrderCap,
   formatOrderStatus,
   formatQuantity,
   formatSide,
-  formatTicksPercent,
+  orderIsActive,
   pluralize,
 } from "@/lib/format"
 import {
@@ -36,8 +37,9 @@ import { cn } from "@/lib/utils"
 
 const filters = [
   { key: "all", label: "All" },
-  { key: "open", label: "Open" },
+  { key: "open", label: "Active" },
   { key: "filled", label: "Filled" },
+  { key: "partial", label: "Partial" },
   { key: "cancelled", label: "Cancelled" },
 ] as const
 
@@ -50,6 +52,7 @@ export function OrdersView() {
   const params = React.useMemo(() => {
     if (filter === "open") return { active: true as const }
     if (filter === "filled") return { status: "filled" }
+    if (filter === "partial") return { status: "partially_filled" }
     if (filter === "cancelled") return { status: "cancelled" }
     return {}
   }, [filter])
@@ -58,15 +61,14 @@ export function OrdersView() {
   const items = flattenPages(orders.data?.pages)
   const count = totalCount(orders.data?.pages)
 
-  const isActive = (order: Order) =>
-    order.status === "open" || order.status === "partially_filled"
+  const isActive = (order: Order) => orderIsActive(order)
 
   return (
     <div>
       <PageHeader
         eyebrow="Portfolio"
         title="Orders"
-        description="Every limit order you’ve placed, newest first. Open orders can be cancelled at any time."
+        description="Every order you’ve placed, newest first. Orders execute immediately; a partial fill cancels the remainder."
         actions={
           <Button
             variant="outline"
@@ -132,7 +134,7 @@ export function OrdersView() {
             title={filter === "all" ? "No orders yet" : `No ${filter} orders`}
             description={
               filter === "all"
-                ? "Limit orders you place on any market will appear here."
+                ? "Orders you place on any market will appear here."
                 : "Try another filter to see the rest of your order history."
             }
             action={
@@ -175,6 +177,10 @@ export function OrdersView() {
                           </span>
                           <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
                             {formatOrderStatus(order.status)}
+                            {order.status === "partially_filled" &&
+                            order.cancelled_at !== null
+                              ? " · remainder cancelled"
+                              : ""}
                           </span>
                         </div>
                         <Link
@@ -198,9 +204,9 @@ export function OrdersView() {
                       <div className="flex shrink-0 items-end justify-between gap-6 md:gap-8">
                         <dl className="grid grid-cols-3 gap-x-6 gap-y-2 text-sm md:gap-x-8">
                           <div>
-                            <dt className="text-[10px] text-muted-foreground">Limit</dt>
+                            <dt className="text-[10px] text-muted-foreground">Slippage cap</dt>
                             <dd className="tabular mt-0.5 font-medium">
-                              {formatTicksPercent(order.limit_price, 1)}
+                              {formatOrderCap(order)}
                             </dd>
                           </div>
                           <div>
@@ -280,8 +286,8 @@ export function OrdersView() {
       </div>
 
       <p className="mt-6 text-[11px] leading-5 text-muted-foreground">
-        Partially filled orders appear under Open. Cancelling releases any
-        remaining credits or reserved contracts.
+        New orders execute immediately or cancel the unfilled remainder. Only
+        legacy resting orders can still be cancelled.
       </p>
     </div>
   )

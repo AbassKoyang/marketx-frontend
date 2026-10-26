@@ -20,8 +20,8 @@ export default function AuthLayout({
             The future is priced one conviction at a time.
           </p>
           <p className="mt-6 max-w-md text-sm leading-6 text-background/60">
-            Buy and sell outcomes on the events you follow. Set your price,
-            wait for a match, and settle on the outcome.
+            Buy and sell outcomes on the events you follow. Place an order that
+            executes immediately, then settle on the outcome.
           </p>
         </div>
 

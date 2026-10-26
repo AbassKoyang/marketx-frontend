@@ -22,8 +22,8 @@ export function SiteFooter() {
           <div className="max-w-sm">
             <Brand />
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              A quieter way to trade what happens next. Prices are set by
-              conviction, one limit order at a time.
+              A quieter way to trade what happens next. Prices follow the
+              market maker as conviction moves.
             </p>
           </div>
 

@@ -37,10 +37,10 @@ export class ApiError extends Error {
 function firstString(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value;
   if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = firstString(item);
-      if (found) return found;
-    }
+    const parts = value
+      .map((item) => firstString(item))
+      .filter((item): item is string => Boolean(item));
+    return parts.length ? parts.join(" ") : null;
   }
   return null;
 }

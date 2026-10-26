@@ -12,9 +12,9 @@ export const metadata: Metadata = {
     template: "%s · MarketX",
   },
   description:
-    "A quieter prediction market for the events you follow. Set your price with limit orders and follow every outcome.",
+    "A quieter prediction market for the events you follow. Trade at market-maker prices and follow every outcome.",
   applicationName: "MarketX",
-  keywords: ["prediction market", "MarketX", "outcomes", "limit orders"],
+  keywords: ["prediction market", "MarketX", "outcomes", "trading"],
 }
 
 export const viewport: Viewport = {

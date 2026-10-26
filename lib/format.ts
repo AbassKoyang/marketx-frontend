@@ -9,8 +9,8 @@ import type {
 export const CREDIT_SCALE = 10_000
 
 const creditFormatter = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 4,
 })
 
 const integerFormatter = new Intl.NumberFormat("en-US", {
@@ -54,24 +54,24 @@ export function formatProbability(
 }
 
 /**
- * Wallet balances, reservations, cost basis, payouts, and P&L are stored as
- * whole credits. Only prices are integer ticks (1–9999).
+ * Wallet balances, cost basis, payouts, and P&L are stored as integer credit
+ * units (10,000 units per credit). Prices are integer ticks (0–10000).
  */
 export function formatCreditValue(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—"
-  return creditFormatter.format(value)
+  return creditFormatter.format(value / CREDIT_SCALE)
 }
 
 export function formatCredits(value: number | null | undefined): string {
   if (value === null || value === undefined) return "— credits"
-  return `${creditFormatter.format(value)} credits`
+  return `${creditFormatter.format(value / CREDIT_SCALE)} credits`
 }
 
 export function formatSignedCreditValue(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—"
   if (value === 0) return creditFormatter.format(0)
   const sign = value > 0 ? "+" : "-"
-  return `${sign}${creditFormatter.format(Math.abs(value))}`
+  return `${sign}${creditFormatter.format(Math.abs(value) / CREDIT_SCALE)}`
 }
 
 export function formatQuantity(value: number | null | undefined): string {
@@ -204,6 +204,46 @@ export function formatSide(side: OrderSide): string {
   return side === "buy" ? "Buy" : "Sell"
 }
 
+/** Only legacy resting orders can be cancelled; new partial fills are terminal. */
+export function orderIsActive(order: {
+  status: OrderStatus
+  cancelled_at: string | null
+}): boolean {
+  return (
+    (order.status === "open" || order.status === "partially_filled") &&
+    order.cancelled_at === null
+  )
+}
+
+/**
+ * Market orders are stored with the widest possible cap (9999 for BUY,
+ * 1 for SELL). Never present that number as an execution price.
+ */
+export function formatOrderCap(order: {
+  side: OrderSide
+  limit_price: number
+}): string {
+  if (
+    (order.side === "buy" && order.limit_price >= 9_999) ||
+    (order.side === "sell" && order.limit_price <= 1)
+  ) {
+    return "No cap"
+  }
+  return formatTicksPercent(order.limit_price, 1)
+}
+
+/**
+ * Exact cash for a trade in credit units. Historical rows created before the
+ * LMSR migration may have `notional === 0`; fall back to price × quantity.
+ */
+export function tradeNotional(trade: {
+  notional: number
+  price: number
+  quantity: number
+}): number {
+  return trade.notional > 0 ? trade.notional : trade.price * trade.quantity
+}
+
 export function eventLabel(eventType: ActivityEvent["event_type"]): string {
   switch (eventType) {
     case "order_placed":
@@ -239,23 +279,26 @@ export function eventDetail(event: ActivityEvent): string | null {
   const payload = event.payload ?? {}
   const quantity = numberFromPayload(payload, "quantity", "released_quantity")
   const price = numberFromPayload(payload, "price", "limit_price")
+  const notional = numberFromPayload(payload, "notional")
   const payout = numberFromPayload(payload, "payout")
   const side = typeof payload.side === "string" ? payload.side : null
 
   switch (event.event_type) {
     case "trade_executed":
       if (quantity !== null && price !== null) {
-        return `${formatQuantity(quantity)} @ ${formatTicksPercent(price, 1)}`
+        const cash = notional !== null ? ` · ${formatCredits(notional)}` : ""
+        return `${formatQuantity(quantity)} @ ${formatTicksPercent(price, 1)}${cash}`
       }
       break
     case "order_placed":
       if (quantity !== null && price !== null) {
-        return `${side === "sell" ? "Sell" : "Buy"} ${formatQuantity(quantity)} @ ${formatTicksPercent(price, 1)}`
+        return `${side === "sell" ? "Sell" : "Buy"} ${formatQuantity(quantity)} · cap ${formatTicksPercent(price, 1)}`
       }
       break
     case "order_filled":
       if (quantity !== null && price !== null) {
-        return `${formatQuantity(quantity)} filled @ ${formatTicksPercent(price, 1)}`
+        const cash = notional !== null ? ` · ${formatCredits(notional)}` : ""
+        return `${formatQuantity(quantity)} filled @ ${formatTicksPercent(price, 1)}${cash}`
       }
       break
     case "order_cancelled":
@@ -276,10 +319,11 @@ export function eventDetail(event: ActivityEvent): string | null {
 export function ledgerLabel(entry: WalletLedgerEntry): string {
   const labels: Record<string, string> = {
     initial_credit: "Starting balance",
-    order_reserve: "Reserved for order",
-    order_release: "Reservation released",
-    reserved_spend: "Spent on trade",
+    available_debit: "Credits spent",
     available_credit: "Credits received",
+    order_reserve: "Reserved for legacy order",
+    order_release: "Legacy reservation released",
+    reserved_spend: "Spent on legacy trade",
   }
   return labels[entry.entry_type] ?? entry.description ?? "Wallet adjustment"
 }
@@ -314,21 +358,36 @@ export function parseDecimalInput(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-/** Current mark value of a position in credits, or null without a price. */
+/** Current mark value of a position in credit units, or null without a price. */
 export function positionValue(position: {
   quantity: number
-  last_price: number | null
+  market_value?: number | null
+  current_price?: number | null
+  last_price?: number | null
 }): number | null {
-  if (position.last_price === null || position.quantity === 0) return null
-  return position.quantity * position.last_price
+  if (position.market_value !== null && position.market_value !== undefined) {
+    return position.market_value
+  }
+  const price = position.current_price ?? position.last_price ?? null
+  if (price === null || position.quantity === 0) return null
+  return position.quantity * price
 }
 
-/** Unrealized P&L in credits based on the last traded price. */
+/** Unrealized P&L in credit units based on the current LMSR price. */
 export function positionUnrealizedPnl(position: {
   quantity: number
   cost_basis: number
-  last_price: number | null
+  unrealized_pnl?: number | null
+  market_value?: number | null
+  current_price?: number | null
+  last_price?: number | null
 }): number | null {
+  if (
+    position.unrealized_pnl !== null &&
+    position.unrealized_pnl !== undefined
+  ) {
+    return position.unrealized_pnl
+  }
   const value = positionValue(position)
   if (value === null) return null
   return value - position.cost_basis

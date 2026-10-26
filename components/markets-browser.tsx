@@ -101,7 +101,8 @@ export function MarketsBrowser({
               Markets
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground md:text-[15px]">
-              Every question on MarketX. Prices reflect the last matched trade.
+              Every question on MarketX. Prices reflect current market-maker
+              pricing.
             </p>
           </div>
           <p

@@ -12,9 +12,9 @@ import {
 export function MarketCard({ market }: { market: Market }) {
   const outcomes = [...market.outcomes]
     .filter((outcome) => outcome.is_active)
-    .sort((a, b) => (b.latest_price ?? -1) - (a.latest_price ?? -1))
+    .sort((a, b) => (b.current_price ?? -1) - (a.current_price ?? -1))
   const visibleOutcomes = outcomes.slice(0, 2)
-  const hasPrice = visibleOutcomes.some((outcome) => outcome.latest_price !== null)
+  const hasPrice = visibleOutcomes.some((outcome) => outcome.current_price !== null)
   const resolution = market.resolution
   const settled =
     (market.status === "resolved" || market.status === "void") &&
@@ -67,7 +67,7 @@ export function MarketCard({ market }: { market: Market }) {
           </div>
         ) : hasPrice ? (
           visibleOutcomes.map((outcome) => {
-            const percent = outcome.latest_price === null ? 0 : outcome.latest_price / 100
+            const percent = outcome.current_price === null ? 0 : outcome.current_price / 100
             return (
               <div key={outcome.id}>
                 <div className="flex items-baseline justify-between gap-3">
@@ -75,13 +75,13 @@ export function MarketCard({ market }: { market: Market }) {
                     {outcome.name}
                   </span>
                   <span className="tabular shrink-0 text-sm font-medium text-foreground">
-                    {formatTicksPercent(outcome.latest_price)}
+                    {formatTicksPercent(outcome.current_price)}
                   </span>
                 </div>
                 <div
                   className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"
                   role="img"
-                  aria-label={`${outcome.name} last price ${formatTicksPercent(outcome.latest_price)}`}
+                  aria-label={`${outcome.name} current price ${formatTicksPercent(outcome.current_price)}`}
                 >
                   <div
                     className="h-full rounded-full bg-foreground/80 transition-[width] duration-500 ease-out"
@@ -94,18 +94,14 @@ export function MarketCard({ market }: { market: Market }) {
         ) : (
           <div className="py-1">
             <p className="text-sm text-muted-foreground">
-              {market.status === "open"
-                ? "No trades yet"
-                : market.status === "draft"
-                  ? "Trading hasn’t opened"
-                  : "No trades recorded"}
+              Pricing unavailable
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground/70">
               {market.status === "open"
-                ? "The first limit order sets the opening price."
+                ? "Prices will appear once the market-maker vector is available."
                 : market.status === "draft"
                   ? "This market has not started trading yet."
-                  : "This market closed without a matched trade."}
+                  : "This market closed without a final price vector."}
             </p>
           </div>
         )}

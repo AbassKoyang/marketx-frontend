@@ -24,7 +24,7 @@ function BookSide({
         <span>Qty</span>
       </div>
       <table className="mt-2 w-full table-fixed border-collapse">
-        <caption className="sr-only">{title} order book levels</caption>
+        <caption className="sr-only">{title} market-maker depth levels</caption>
         <thead className="sr-only">
           <tr>
             <th scope="col">Price</th>
@@ -74,11 +74,11 @@ function BookSide({
 
 export function OrderBookPanel({
   outcomeId,
-  lastPriceTicks,
+  currentPriceTicks,
   isOpen,
 }: {
   outcomeId: number
-  lastPriceTicks: number | null
+  currentPriceTicks: number | null
   isOpen: boolean
 }) {
   const book = useOrderBook(outcomeId)
@@ -89,6 +89,7 @@ export function OrderBookPanel({
     ...asks.map((level) => level.quantity),
     0
   )
+  const currentPrice = book.data?.current_price ?? currentPriceTicks
   const bestBid = book.data?.bids[0]?.price
   const bestAsk = book.data?.asks[0]?.price
   const spread =
@@ -105,16 +106,16 @@ export function OrderBookPanel({
             id="order-book-title"
             className="font-heading text-base font-medium tracking-[-0.02em]"
           >
-            Order book
+            Market-maker liquidity
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Resting limit orders
+            Indicative AMM depth — not user orders
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div>
-            <span className="text-muted-foreground">Last </span>
-            <span className="tabular font-medium">{formatTicksPercent(lastPriceTicks, 1)}</span>
+            <span className="text-muted-foreground">Current </span>
+            <span className="tabular font-medium">{formatTicksPercent(currentPrice, 1)}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Spread </span>
@@ -129,7 +130,7 @@ export function OrderBookPanel({
         <div className="px-5 py-10 text-center">
           <p className="text-sm font-medium">Trading is closed</p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            The order book is cleared when a market closes.
+            Indicative liquidity is unavailable once a market closes.
           </p>
         </div>
       ) : book.isLoading ? (
@@ -151,23 +152,23 @@ export function OrderBookPanel({
       ) : book.isError ? (
         <div className="px-5 py-8">
           <ErrorState
-            title="Order book didn’t load"
-            description="We couldn’t fetch resting orders for this outcome."
+            title="Depth didn’t load"
+            description="We couldn’t fetch market-maker liquidity for this outcome."
             onRetry={() => book.refetch()}
           />
         </div>
       ) : (
         <div className="grid grid-cols-2 divide-x divide-border/60">
           <BookSide
-            title="Bids"
+            title="Buy-back"
             levels={bids}
-            emptyLabel="No bids"
+            emptyLabel="No buy-back levels"
             maxQuantity={maxQuantity}
           />
           <BookSide
-            title="Asks"
+            title="Sell"
             levels={asks}
-            emptyLabel="No asks"
+            emptyLabel="No sell levels"
             maxQuantity={maxQuantity}
           />
         </div>

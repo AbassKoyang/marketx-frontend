@@ -38,12 +38,12 @@ function axisTick(value: number, range: PriceHistoryRange): string {
 export function PriceChart({
   outcomeId,
   outcomeName,
-  lastPriceTicks,
+  currentPriceTicks,
   marketStatus,
 }: {
   outcomeId: number
   outcomeName: string
-  lastPriceTicks: number | null
+  currentPriceTicks: number | null
   marketStatus: MarketStatus
 }) {
   const [range, setRange] = React.useState<PriceHistoryRange>("ALL")
@@ -56,6 +56,8 @@ export function PriceChart({
     return points
       .map((point) => ({
         ...point,
+        // The API reports Unix seconds; Date and the chart axis use milliseconds.
+        timestamp: point.timestamp * 1000,
         percent: Math.min(Math.max(point.price * 100, 0), 100),
       }))
       .sort((a, b) => a.timestamp - b.timestamp)
@@ -64,7 +66,7 @@ export function PriceChart({
   const first = data[0]
   const last = data[data.length - 1]
   const change = first && last ? (last.price - first.price) * 100 : null
-  const current = last?.price ?? (lastPriceTicks !== null ? lastPriceTicks / 10000 : null)
+  const current = last?.price ?? (currentPriceTicks !== null ? currentPriceTicks / 10000 : null)
   const ended = marketStatus !== "open" && marketStatus !== "draft"
   const emptyTitle = ended
     ? "No trades were recorded"
@@ -72,10 +74,10 @@ export function PriceChart({
       ? "Trading hasn’t opened"
       : "No trades yet"
   const emptyDescription = ended
-    ? "This outcome closed without a matched trade."
+    ? "This outcome closed without a recorded price change."
     : marketStatus === "draft"
-      ? "The chart begins after trading opens and the first trade matches."
-      : "The chart begins after the first matched trade in this outcome."
+      ? "The chart begins after trading opens and the first trade executes."
+      : "The chart begins after the first trade executes in this outcome."
 
   return (
     <section
@@ -259,7 +261,7 @@ export function PriceChart({
 
       <div className="border-t border-border/60 px-5 py-3">
         <p className="text-[11px] leading-5 text-muted-foreground/80">
-          Prices reflect the last matched trade.
+          Prices reflect current market-maker pricing, not the last trade.
         </p>
       </div>
     </section>

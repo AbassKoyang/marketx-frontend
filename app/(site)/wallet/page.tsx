@@ -5,7 +5,7 @@ import { WalletView } from "@/components/wallet/wallet-view"
 
 export const metadata: Metadata = {
   title: "Wallet",
-  description: "Your MarketX credits, reservations, and ledger.",
+  description: "Your MarketX credits and ledger.",
 }
 
 export default function WalletPage() {

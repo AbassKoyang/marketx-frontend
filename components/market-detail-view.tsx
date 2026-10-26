@@ -22,7 +22,7 @@ import {
 import { StatusBadge } from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import { isApiError } from "@/lib/api/client"
-import type { Market } from "@/lib/api/types"
+import type { Market, MarketStatus } from "@/lib/api/types"
 import {
   formatDateTime,
   formatQuantity,
@@ -321,6 +321,8 @@ export function MarketDetailView({ slug }: { slug: string }) {
   })()
 
   const stats = statsQuery.data
+  const displayStatus: MarketStatus =
+    isMarketOpen && closesAt <= now ? "closed" : market.status
   const lastTrade = stats
     ? stats.trade_count === 0
       ? market.status === "open" || market.status === "draft"
@@ -353,7 +355,7 @@ export function MarketDetailView({ slug }: { slug: string }) {
 
       <header className="mt-6">
         <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={market.status} />
+          <StatusBadge status={displayStatus} />
           <span className="text-xs text-muted-foreground">{statusLine}</span>
         </div>
 
@@ -410,7 +412,7 @@ export function MarketDetailView({ slug }: { slug: string }) {
             </dd>
           </div>
           <div>
-            <dt className="quiet-label">Matched trades</dt>
+            <dt className="quiet-label">Trades</dt>
             <dd className="tabular mt-1 text-sm font-medium">
               {stats ? formatQuantity(stats.trade_count) : "—"}
             </dd>
@@ -430,16 +432,16 @@ export function MarketDetailView({ slug }: { slug: string }) {
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {market.status === "resolved"
-                ? "Final outcome and the last recorded prices."
+                ? "Final outcome and settled prices."
                 : market.status === "void"
-                  ? "This market was voided. Final outcome and the last recorded prices."
+                  ? "This market was voided. Prices are frozen at close."
                   : isTradingOpen
-                    ? "Prices are probabilities implied by the last matched trade."
+                    ? "Current market-maker prices. Active outcomes sum to 100%."
                     : opensAt > now
-                      ? "Trading opens soon. Prices reflect the last matched trade."
+                      ? "Trading opens soon. Prices show the current market-maker vector."
                       : closesAt <= now
-                        ? "Trading is closed. Prices reflect the last matched trade."
-                        : "Trading has not opened yet. Prices reflect the last matched trade."}
+                        ? "Trading is closed. Prices show the final market-maker vector."
+                        : "Trading has not opened yet. Prices show the starting market-maker vector."}
             </p>
           </div>
           <span className="text-xs text-muted-foreground">
@@ -484,7 +486,7 @@ export function MarketDetailView({ slug }: { slug: string }) {
                   ) : null}
                 </span>
                 <span className="tabular shrink-0 text-lg font-medium tracking-[-0.02em]">
-                  {formatTicksPercent(outcome.latest_price, 1)}
+                  {formatTicksPercent(outcome.current_price, 1)}
                 </span>
               </button>
             )
@@ -506,14 +508,14 @@ export function MarketDetailView({ slug }: { slug: string }) {
           <PriceChart
             outcomeId={selectedOutcome.id}
             outcomeName={selectedOutcome.name}
-            lastPriceTicks={selectedOutcome.latest_price}
+            currentPriceTicks={selectedOutcome.current_price}
             marketStatus={market.status}
           />
 
           <OrderBookPanel
             outcomeId={selectedOutcome.id}
-            lastPriceTicks={selectedOutcome.latest_price}
-            isOpen={isMarketOpen}
+            currentPriceTicks={selectedOutcome.current_price}
+            isOpen={isTradingOpen}
           />
 
           <MarketTabs

@@ -3,7 +3,7 @@
 import { ErrorState, Spinner } from "@/components/page-states"
 import { Button } from "@/components/ui/button"
 import type { MarketStatus } from "@/lib/api/types"
-import { formatDateTime, formatQuantity, formatTicksPercent } from "@/lib/format"
+import { formatDateTime, formatCreditValue, formatQuantity, formatTicksPercent, tradeNotional } from "@/lib/format"
 import { useTrades } from "@/lib/query/hooks"
 import { flattenPages } from "@/lib/query/pagination"
 
@@ -24,7 +24,7 @@ export function MarketTrades({
     <div>
       <div className="flex items-center justify-between gap-3 px-5 py-3.5">
         <p className="text-xs text-muted-foreground">
-          Matched trades · {outcomeName}
+          Executed trades · {outcomeName}
         </p>
       </div>
 
@@ -61,10 +61,10 @@ export function MarketTrades({
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             {ended
-              ? "No matched trades were recorded for this outcome."
+              ? "No executed trades were recorded for this outcome."
               : marketStatus === "draft"
-                ? "Trades will appear here once the market opens and orders can match."
-                : "Matched trades will appear here as soon as an order fills."}
+                ? "Trades will appear here once the market opens and orders execute."
+                : "Executed trades will appear here as soon as an order fills."}
           </p>
         </div>
       ) : null}
@@ -82,6 +82,9 @@ export function MarketTrades({
                   <th scope="col" className="px-3 py-2 text-end font-medium">
                     Quantity
                   </th>
+                  <th scope="col" className="px-3 py-2 text-end font-medium">
+                    Notional
+                  </th>
                   <th scope="col" className="px-5 py-2 text-end font-medium">
                     Time
                   </th>
@@ -98,6 +101,9 @@ export function MarketTrades({
                     </td>
                     <td className="tabular px-3 py-3 text-end text-muted-foreground">
                       {formatQuantity(trade.quantity)}
+                    </td>
+                    <td className="tabular px-3 py-3 text-end text-muted-foreground">
+                      {formatCreditValue(tradeNotional(trade))}
                     </td>
                     <td className="px-5 py-3 text-end text-xs text-muted-foreground">
                       <time

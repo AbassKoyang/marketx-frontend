@@ -13,6 +13,7 @@ import {
   api,
   type MarketListParams,
   type PageParams,
+  type QuoteParams,
 } from "@/lib/api/endpoints"
 import type {
   Market,
@@ -188,6 +189,17 @@ export function useOrderBook(outcomeId: number | null) {
   })
 }
 
+export function useQuote(params: QuoteParams, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.quote(params),
+    queryFn: () => api.trading.quote(params),
+    enabled: enabled && params.quantity > 0,
+    placeholderData: keepPreviousData,
+    staleTime: 5_000,
+    retry: false,
+  })
+}
+
 export function useTrades(
   params: PageParams & { outcome?: number; mine?: boolean } = {}
 ) {
@@ -266,6 +278,7 @@ function useInvalidateTradingState() {
     queryClient.invalidateQueries({ queryKey: ["positions"] })
     queryClient.invalidateQueries({ queryKey: ["trades"] })
     queryClient.invalidateQueries({ queryKey: ["activity"] })
+    queryClient.invalidateQueries({ queryKey: ["quote"] })
     queryClient.invalidateQueries({ queryKey: queryKeys.wallet })
     queryClient.invalidateQueries({ queryKey: ["market"] })
     queryClient.invalidateQueries({ queryKey: ["outcome"] })

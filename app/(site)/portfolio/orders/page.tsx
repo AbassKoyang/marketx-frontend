@@ -5,7 +5,7 @@ import { OrdersView } from "@/components/portfolio/orders-view"
 
 export const metadata: Metadata = {
   title: "Orders",
-  description: "Limit orders you have placed on MarketX.",
+  description: "Orders you have placed on MarketX.",
 }
 
 export default function OrdersPage() {

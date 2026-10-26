@@ -54,7 +54,7 @@ export function NotificationsView() {
               render={<Link href="/portfolio/orders" />}
               nativeButton={false}
             >
-              Open orders
+              Order history
             </Button>
           </div>
         </section>
@@ -94,7 +94,7 @@ export function NotificationsView() {
                 <div>
                   <p className="font-medium">Orders</p>
                   <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                    Resting orders, fills, and cancellations for your account.
+                    Executions, fills, and cancellations for your account.
                   </p>
                   <Link
                     href="/portfolio/orders"

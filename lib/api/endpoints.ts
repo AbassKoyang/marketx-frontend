@@ -13,6 +13,7 @@ import type {
   PositionSummary,
   PriceHistoryRange,
   PriceHistoryResponse,
+  Quote,
   SubmitOrderPayload,
   Trade,
   UpdateProfilePayload,
@@ -44,6 +45,13 @@ export type MarketListParams = {
 
 export type PageParams = {
   page?: number
+}
+
+export type QuoteParams = {
+  outcome: number
+  side: "buy" | "sell"
+  quantity: number
+  limit_price?: number
 }
 
 export const api = {
@@ -90,6 +98,9 @@ export const api = {
     
     submitOrder: (data: SubmitOrderPayload) => 
       request<Order>({ url: "/trading/orders/", method: "POST", data }),
+    
+    quote: (params: QuoteParams) =>
+      request<Quote>({ url: "/trading/quote/", params }),
     
     cancelOrder: (id: number) => 
       request<Order>({ url: `/trading/orders/${id}/`, method: "DELETE" }),

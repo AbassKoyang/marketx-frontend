@@ -42,7 +42,7 @@ export function PositionsView() {
       <PageHeader
         eyebrow="Portfolio"
         title="Positions"
-        description="Every outcome you hold, marked against its last matched trade."
+        description="Every outcome you hold, marked at the current market-maker price."
         actions={
           <Button
             variant="outline"
@@ -106,7 +106,7 @@ export function PositionsView() {
           <EmptyState
             icon={ChartLineData01Icon}
             title="No positions yet"
-            description="When one of your limit orders fills, the outcome you bought or sold will appear here."
+            description="When one of your orders fills, the outcome you bought or sold will appear here."
             action={
               <Button render={<Link href="/markets" />} nativeButton={false}>
                 Browse markets
@@ -176,9 +176,9 @@ export function PositionsView() {
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-[10px] text-muted-foreground">Last price</dt>
+                          <dt className="text-[10px] text-muted-foreground">Current price</dt>
                           <dd className="tabular mt-0.5 font-medium">
-                            {formatTicksPercent(position.last_price, 1)}
+                            {formatTicksPercent(position.current_price, 1)}
                           </dd>
                         </div>
                         <div>
@@ -233,8 +233,8 @@ export function PositionsView() {
       </div>
 
       <p className="mt-6 text-[11px] leading-5 text-muted-foreground">
-        Position values use the last traded price for each outcome. They are
-        marks, not guaranteed exit prices.
+        Position values use the current market-maker price for each outcome.
+        They are marks, not guaranteed exit prices.
       </p>
     </div>
   )

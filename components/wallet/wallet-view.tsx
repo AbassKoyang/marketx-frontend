@@ -40,7 +40,7 @@ export function WalletView() {
       <PageHeader
         eyebrow="Account"
         title="Wallet"
-        description="Your credits, reservations, and every balance movement."
+        description="Your credits and every balance movement."
         actions={
           <Button
             variant="outline"
@@ -82,7 +82,7 @@ export function WalletView() {
               {wallet.data ? formatCreditValue(wallet.data.reserved_balance) : "—"}
             </p>
             <p className="mt-0.5 text-[10px] text-background/40">
-              Backing open buy orders
+              Held for legacy open orders
             </p>
           </div>
           <div>
@@ -250,14 +250,14 @@ export function WalletView() {
               <li>
                 <p className="font-medium">Starting balance</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  New accounts begin with 10,000 credits.
+                  New accounts receive a starting balance to begin trading.
                 </p>
               </li>
               <li>
-                <p className="font-medium">Reservations</p>
+                <p className="font-medium">Immediate execution</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Buy orders reserve credits at your limit price until they fill or
-                  are cancelled.
+                  Orders execute immediately at the market-maker price. Your
+                  available balance is debited or credited as each order fills.
                 </p>
               </li>
               <li>
@@ -271,8 +271,8 @@ export function WalletView() {
 
           <div className="rounded-xl border border-border/80 bg-surface/50 p-5">
             <p className="text-xs leading-5 text-muted-foreground">
-              Need to free up credits? Cancel an open buy order to release its
-              reservation.
+              Orders never rest. Your available balance updates immediately
+              whenever an order executes.
             </p>
             <Button
               variant="outline"
@@ -281,7 +281,7 @@ export function WalletView() {
               render={<Link href="/portfolio/orders" />}
               nativeButton={false}
             >
-              Manage orders
+              View order history
             </Button>
           </div>
         </div>

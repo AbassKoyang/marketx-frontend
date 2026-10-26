@@ -38,7 +38,7 @@ export async function generateMetadata({
   if (!market) {
     return {
       title: "Market",
-      description: "Trade prediction markets with limit orders on MarketX.",
+      description: "Trade prediction markets on MarketX.",
     }
   }
 
@@ -47,7 +47,7 @@ export async function generateMetadata({
     description:
       market.description ||
       market.question ||
-      "Trade this prediction market with limit orders on MarketX.",
+      "Trade this prediction market on MarketX.",
   }
 }
 

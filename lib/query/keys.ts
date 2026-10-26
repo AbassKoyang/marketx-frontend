@@ -1,4 +1,4 @@
-import type { MarketListParams } from "@/lib/api/endpoints"
+import type { MarketListParams, QuoteParams } from "@/lib/api/endpoints"
 import type { PageParams } from "@/lib/api/endpoints"
 import type { PriceHistoryRange } from "@/lib/api/types"
 
@@ -14,6 +14,7 @@ export const queryKeys = {
   outcomeHistory: (outcomeId: number, range: PriceHistoryRange) =>
     ["outcome", outcomeId, "history", range] as const,
   orderBook: (outcomeId: number) => ["outcome", outcomeId, "order-book"] as const,
+  quote: (params: QuoteParams) => ["quote", params] as const,
 
   trades: (params: PageParams & { outcome?: number; mine?: boolean }) =>
     ["trades", params] as const,

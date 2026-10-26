@@ -16,6 +16,8 @@ import {
   eventDetail,
   eventLabel,
   formatCreditValue,
+  formatOrderCap,
+  formatOrderStatus,
   formatQuantity,
   formatRelative,
   formatSignedCreditValue,
@@ -54,7 +56,7 @@ export function PortfolioOverview() {
   const wallet = useWallet()
   const summary = usePositionSummary()
   const positions = usePositions({})
-  const orders = useOrders({ active: true })
+  const orders = useOrders({})
   const activity = useActivity({})
 
   const positionItems = flattenPages(positions.data?.pages)
@@ -71,7 +73,7 @@ export function PortfolioOverview() {
             ? `Hello, ${user.first_name}.`
             : "Your portfolio"
         }
-        description="Your credits, open positions, and resting limit orders — all in one place."
+        description="Your credits, open positions, and recent orders — all in one place."
         actions={
           <Button
             variant="outline"
@@ -115,7 +117,7 @@ export function PortfolioOverview() {
         <StatCard
           label="Reserved credits"
           value={wallet.data ? formatCreditValue(wallet.data.reserved_balance) : "—"}
-          hint="Backing open buy orders"
+          hint="Held for legacy open orders"
         />
         <StatCard
           label="Open positions"
@@ -215,7 +217,7 @@ export function PortfolioOverview() {
                           )}
                         >
                           {pnl === null
-                            ? `${formatTicksPercent(position.last_price, 1)} last`
+                            ? `${formatTicksPercent(position.current_price, 1)} current`
                             : `${formatSignedCreditValue(pnl)} unrealized`}
                         </p>
                       </div>
@@ -236,7 +238,7 @@ export function PortfolioOverview() {
               id="overview-orders"
               className="font-heading text-base font-medium tracking-[-0.02em]"
             >
-              Open orders
+              Recent orders
             </h2>
             <Link
               href="/portfolio/orders"
@@ -258,9 +260,9 @@ export function PortfolioOverview() {
 
           {orders.isSuccess && orderItems.length === 0 ? (
             <div className="px-4 py-10 text-center">
-              <p className="text-sm font-medium">No resting orders</p>
+              <p className="text-sm font-medium">No orders yet</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Limit orders that haven’t filled appear here.
+                Orders you place will appear here after they execute.
               </p>
             </div>
           ) : null}
@@ -281,15 +283,17 @@ export function PortfolioOverview() {
                       <p className="truncate text-sm">
                         <span className="font-medium capitalize">{order.side}</span>{" "}
                         <span className="tabular text-muted-foreground">
-                          {formatTicksPercent(order.limit_price, 1)}
+                          {formatOrderCap(order)}
                         </span>
                       </p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {order.outcome_name ?? order.market_title}
+                        {order.outcome_name ?? order.market_title} ·{" "}
+                        {formatOrderStatus(order.status)}
                       </p>
                     </div>
                     <p className="tabular shrink-0 text-xs text-muted-foreground">
-                      {formatQuantity(order.remaining_quantity)} left
+                      {formatQuantity(order.filled_quantity)} /{" "}
+                      {formatQuantity(order.original_quantity)} filled
                     </p>
                   </Link>
                 </li>

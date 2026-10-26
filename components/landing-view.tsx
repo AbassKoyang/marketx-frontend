@@ -34,7 +34,7 @@ const steps = [
   },
   {
     title: "Set your price",
-    body: "Place a limit order between 0.01% and 99.99%. Your order rests in the book until someone matches it.",
+    body: "Use a market order or set a slippage cap between 0.01% and 99.99%. Orders execute immediately against the market maker; any unfilled remainder is cancelled.",
   },
   {
     title: "Settle on the outcome",
@@ -71,9 +71,9 @@ export function LandingView() {
 
             <Reveal delay={0.12}>
               <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-[17px]">
-                Buy and sell outcomes on the questions you follow. Prices are
-                set by limit orders, and every trade runs on virtual credits in
-                a simulated prediction market.
+                Buy and sell outcomes on the questions you follow. Prices come
+                from a market-maker pricing model, and every trade runs on
+                virtual credits in a simulated prediction market.
               </p>
             </Reveal>
 
@@ -139,15 +139,15 @@ export function LandingView() {
                 <div>
                   <p className="text-sm font-medium">A price is a probability</p>
                   <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-                    Quotes live between 0.01% and 99.99%. The market’s last
-                    price shows what traders currently imply.
+                    Prices run from 0% to 100%. Across active outcomes, the
+                    market-maker vector always sums to 100%.
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Every trade is a limit order</p>
+                  <p className="text-sm font-medium">Orders execute immediately</p>
                   <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-                    You choose the most you’ll pay or the least you’ll accept.
-                    Nothing fills at a worse price.
+                    Use a market order or set a slippage cap. Nothing rests in an
+                    order book, and any unfilled remainder is cancelled.
                   </p>
                 </div>
                 <div>
@@ -275,7 +275,7 @@ export function LandingView() {
                 strokeWidth={1.7}
               />
               <p className="text-xs leading-5 text-muted-foreground">
-                Every trade is a limit order, and every fill updates your
+                Every order executes immediately, and every fill updates your
                 portfolio.
               </p>
             </div>
@@ -315,8 +315,8 @@ export function LandingView() {
             </h2>
             <p className="mt-4 text-sm leading-6 text-background/60">
               {isAuthenticated
-                ? "Choose a market and set your next limit order. Your portfolio is ready when you are."
-                : "Sign in with Google, choose a market, and place your first limit order. Start with 10,000 credits."}
+                ? "Choose a market and place your next order. Your portfolio is ready when you are."
+                : "Sign in with Google, choose a market, and place your first order."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button
