@@ -25,7 +25,7 @@ export function StatusBadge({
   status: MarketStatus
   className?: string
 }) {
-  return (
+    return (
     <span
       className={cn(
         "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium whitespace-nowrap",

@@ -1,0 +1,24 @@
+{
+    "name": "MarketX",
+    "short_name": "MarketX",
+    "description": "A quieter prediction market for the events you follow. Put your money where your mouth is.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#101010",
+    "orientation": "portrait",
+    "icons": [
+      {
+        "src": "/icon-512.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+      }
+    ]
+  }

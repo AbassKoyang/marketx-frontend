@@ -256,7 +256,7 @@ export function WalletView() {
               <li>
                 <p className="font-medium">Immediate execution</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Orders execute immediately at the market-maker price. Your
+                  Orders execute immediately at the current trading price. Your
                   available balance is debited or credited as each order fills.
                 </p>
               </li>

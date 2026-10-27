@@ -64,15 +64,14 @@ export function LandingView() {
             </Reveal>
 
             <Reveal delay={0.06}>
-              <h1 className="mt-5 font-heading text-[clamp(2.8rem,7.4vw,5.1rem)] leading-[0.97] font-medium tracking-[-0.05em] text-balance">
+              <h1 className="mt-5 font-heading text-[clamp(2.8rem,7.4vw,5.1rem)] leading-[0.97] font-medium tracking-tighter text-balance">
                 Trade what happens next.
               </h1>
             </Reveal>
 
             <Reveal delay={0.12}>
               <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-[17px]">
-                Buy and sell outcomes on the questions you follow. Prices come
-                from a market-maker pricing model, and every trade runs on
+                Put your money where your mouth is. Buy and sell outcomes on the questions you follow. Every trade runs on
                 virtual credits in a simulated prediction market.
               </p>
             </Reveal>
@@ -101,31 +100,6 @@ export function LandingView() {
                 </Button>
               </div>
             </Reveal>
-
-            <Reveal delay={0.3}>
-              <dl className="mt-12 flex max-w-md items-center gap-8 border-t border-border/70 pt-5">
-                <div>
-                  <dt className="quiet-label">Open markets</dt>
-                  <dd className="tabular mt-1 text-xl font-medium">
-                    {openCount === undefined ? "—" : formatQuantity(openCount)}
-                  </dd>
-                </div>
-                <div className="h-8 w-px bg-border" aria-hidden="true" />
-                <div>
-                  <dt className="quiet-label">Categories</dt>
-                  <dd className="tabular mt-1 text-xl font-medium">
-                    {categoriesQuery.data
-                      ? formatQuantity(categoriesQuery.data.count)
-                      : "—"}
-                  </dd>
-                </div>
-                <div className="h-8 w-px bg-border" aria-hidden="true" />
-                <div>
-                  <dt className="quiet-label">Settlement</dt>
-                  <dd className="mt-1 text-sm font-medium">On resolution</dd>
-                </div>
-              </dl>
-            </Reveal>
           </div>
 
           <Reveal delay={0.2} className="lg:justify-self-end">
@@ -140,7 +114,7 @@ export function LandingView() {
                   <p className="text-sm font-medium">A price is a probability</p>
                   <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
                     Prices run from 0% to 100%. Across active outcomes, the
-                    market-maker vector always sums to 100%.
+                    prices always sums to 100%.
                   </p>
                 </div>
                 <div>

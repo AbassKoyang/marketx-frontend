@@ -109,7 +109,7 @@ export function OrderBookPanel({
             Market-maker liquidity
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Indicative AMM depth — not user orders
+            Indicative AMM depth
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs">

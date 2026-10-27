@@ -56,7 +56,6 @@ export function PriceChart({
     return points
       .map((point) => ({
         ...point,
-        // The API reports Unix seconds; Date and the chart axis use milliseconds.
         timestamp: point.timestamp * 1000,
         percent: Math.min(Math.max(point.price * 100, 0), 100),
       }))
@@ -261,7 +260,7 @@ export function PriceChart({
 
       <div className="border-t border-border/60 px-5 py-3">
         <p className="text-[11px] leading-5 text-muted-foreground/80">
-          Prices reflect current market-maker pricing, not the last trade.
+          Prices reflect current market-maker pricing.
         </p>
       </div>
     </section>

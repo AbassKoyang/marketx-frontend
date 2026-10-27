@@ -438,10 +438,10 @@ export function MarketDetailView({ slug }: { slug: string }) {
                   : isTradingOpen
                     ? "Current market-maker prices. Active outcomes sum to 100%."
                     : opensAt > now
-                      ? "Trading opens soon. Prices show the current market-maker vector."
+                      ? "Trading opens soon."
                       : closesAt <= now
-                        ? "Trading is closed. Prices show the final market-maker vector."
-                        : "Trading has not opened yet. Prices show the starting market-maker vector."}
+                        ? "Trading is closed."
+                        : "Trading has not opened yet."}
             </p>
           </div>
           <span className="text-xs text-muted-foreground">

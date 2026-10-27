@@ -42,7 +42,7 @@ export function PositionsView() {
       <PageHeader
         eyebrow="Portfolio"
         title="Positions"
-        description="Every outcome you hold, marked at the current market-maker price."
+        description="Every outcome you hold, marked at the current trading price."
         actions={
           <Button
             variant="outline"
@@ -233,7 +233,7 @@ export function PositionsView() {
       </div>
 
       <p className="mt-6 text-[11px] leading-5 text-muted-foreground">
-        Position values use the current market-maker price for each outcome.
+        Position values use the current trading price for each outcome.
         They are marks, not guaranteed exit prices.
       </p>
     </div>

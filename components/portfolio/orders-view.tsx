@@ -68,7 +68,7 @@ export function OrdersView() {
       <PageHeader
         eyebrow="Portfolio"
         title="Orders"
-        description="Every order you’ve placed, newest first. Orders execute immediately; a partial fill cancels the remainder."
+        description="Every order you’ve placed. Orders execute immediately; a partial fill cancels the remainder."
         actions={
           <Button
             variant="outline"

@@ -73,7 +73,7 @@ export function PortfolioOverview() {
             ? `Hello, ${user.first_name}.`
             : "Your portfolio"
         }
-        description="Your credits, open positions, and recent orders — all in one place."
+        description="Your credits, open positions, and recent orders."
         actions={
           <Button
             variant="outline"

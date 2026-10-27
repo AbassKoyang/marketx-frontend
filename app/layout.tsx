@@ -12,9 +12,35 @@ export const metadata: Metadata = {
     template: "%s · MarketX",
   },
   description:
-    "A quieter prediction market for the events you follow. Trade at market-maker prices and follow every outcome.",
+    "A quieter prediction market for the events you follow. Put your money where your mouth is.",
   applicationName: "MarketX",
   keywords: ["prediction market", "MarketX", "outcomes", "trading"],
+  manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "MarketX — Trade what happens next",
+    },
+    openGraph: {
+      title: "MarketX — Trade what happens next",
+      description: "A quieter prediction market for the events you follow. Put your money where your mouth is.",
+      url: "https://usemarketx.vercel.app",
+      siteName: "Koyang",
+      images: [
+        {
+          url: "https://usemarketx.vercel.app/icon-512.png",
+          width: 1200,
+          height: 630,
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "MarketX — Trade what happens next",
+      description: "A quieter prediction market for the events you follow. Put your money where your mouth is.",
+      images: ["https://usemarketx.vercel.app/icon-512.png"]
+    },
 }
 
 export const viewport: Viewport = {
