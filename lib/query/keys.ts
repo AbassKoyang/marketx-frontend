@@ -1,6 +1,6 @@
 import type { MarketListParams, QuoteParams } from "@/lib/api/endpoints"
 import type { PageParams } from "@/lib/api/endpoints"
-import type { PriceHistoryRange } from "@/lib/api/types"
+import type { NotificationEventType, PriceHistoryRange } from "@/lib/api/types"
 
 export const queryKeys = {
   me: ["me"] as const,
@@ -26,4 +26,9 @@ export const queryKeys = {
     ["positions", params] as const,
   positionSummary: ["positions", "summary"] as const,
   ledger: (params: PageParams) => ["wallet", "ledger", params] as const,
+
+  notifications: (params: { unread?: boolean; event_type?: NotificationEventType }) =>
+    ["notifications", "list", params] as const,
+  unreadCount: ["notifications", "unread"] as const,
+  notificationDevices: ["notifications", "devices"] as const,
 }

@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -41,6 +42,7 @@ import { formatCreditValue, fullName, initials } from "@/lib/format"
 import {
   useAuth,
   useLogout,
+  useUnreadNotificationCount,
   useWallet,
 } from "@/lib/query/hooks"
 import { cn } from "@/lib/utils"
@@ -116,6 +118,35 @@ function HeaderSearch() {
         /
       </kbd>
     </form>
+  )
+}
+
+function NotificationBell() {
+  const { isAuthenticated, isLoading } = useAuth()
+  const unread = useUnreadNotificationCount(isAuthenticated)
+
+  if (isLoading || !isAuthenticated) return null
+
+  const count = unread.data?.unread_count ?? 0
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="relative"
+      aria-label={
+        count > 0 ? `Notifications, ${count} unread` : "Notifications"
+      }
+      render={<Link href="/notifications" />}
+      nativeButton={false}
+    >
+      <HugeiconsIcon icon={Notification01Icon} strokeWidth={1.7} />
+      {count > 0 ? (
+        <span className="absolute -end-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-foreground text-[9px] font-medium text-background">
+          {count > 9 ? "9+" : count}
+        </span>
+      ) : null}
+    </Button>
   )
 }
 
@@ -278,24 +309,26 @@ function MobileMenu() {
             const active =
               pathname === item.href || pathname.startsWith(`${item.href}/`)
             return (
-              <button
-                key={item.href}
-                type="button"
-                onClick={() => router.push(item.href)}
-                className={cn(
-                  "flex h-11 items-center justify-between rounded-lg px-3 text-left text-sm transition-colors",
-                  active
-                    ? "bg-muted font-medium text-foreground"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                )}
-              >
-                {item.label}
-                <HugeiconsIcon
-                  icon={ArrowUpRight01Icon}
-                  className="size-4 opacity-40"
-                  strokeWidth={1.7}
-                />
-              </button>
+                <SheetClose className={`w-full`}>
+                   <button
+                    key={item.href}
+                    type="button"
+                    onClick={() => router.push(item.href)}
+                    className={cn(
+                      "w-full flex h-11 items-center justify-between rounded-lg px-3 text-left text-sm transition-colors",
+                      active
+                        ? "bg-muted font-medium text-foreground"
+                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                    <HugeiconsIcon
+                      icon={ArrowUpRight01Icon}
+                      className="size-4 opacity-40"
+                      strokeWidth={1.7}
+                    />
+                  </button>
+                </SheetClose>
             )
           })}
         </nav>
@@ -372,6 +405,7 @@ export function SiteHeader() {
             <HugeiconsIcon icon={Search01Icon} strokeWidth={1.7} />
           </Button>
           <WalletIndicator />
+          <NotificationBell />
           <AccountMenu />
           <MobileMenu />
         </div>

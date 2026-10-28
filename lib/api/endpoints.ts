@@ -1,10 +1,13 @@
 import { request } from "./client"
 import type {
   ActivityEvent,
+  AppNotification,
   AuthMessage,
   Market,
   MarketCategory,
   MarketStats,
+  NotificationDevice,
+  NotificationListParams,
   OnboardingPayload,
   Order,
   OrderBook,
@@ -14,8 +17,10 @@ import type {
   PriceHistoryRange,
   PriceHistoryResponse,
   Quote,
+  RegisterDevicePayload,
   SubmitOrderPayload,
   Trade,
+  UnreadCount,
   UpdateProfilePayload,
   UserProfile,
   Wallet,
@@ -127,5 +132,48 @@ export const api = {
     
     ledger: (params = {}) => 
       request<PaginatedResponse<WalletLedgerEntry>>({ url: "/wallet/ledger/", params }),
+  },
+
+  notifications: {
+    list: (params: NotificationListParams = {}) =>
+      request<PaginatedResponse<AppNotification>>({
+        url: "/notifications/",
+        params,
+      }),
+
+    unreadCount: () =>
+      request<UnreadCount>({ url: "/notifications/unread-count/" }),
+
+    markRead: (id: number) =>
+      request<AppNotification>({
+        url: `/notifications/${id}/read/`,
+        method: "POST",
+      }),
+
+    markAllRead: (params: { event_type?: string } = {}) =>
+      request<{ updated: number }>({
+        url: "/notifications/mark-all-read/",
+        method: "POST",
+        params,
+      }),
+
+    devices: () =>
+      request<PaginatedResponse<NotificationDevice>>({
+        url: "/notifications/devices/",
+      }),
+
+    registerDevice: (data: RegisterDevicePayload) =>
+      request<NotificationDevice>({
+        url: "/notifications/devices/",
+        method: "POST",
+        data,
+      }),
+
+    // The API soft-deletes the device (`is_active = False`) and answers 204.
+    deactivateDevice: (id: number) =>
+      request<void>({
+        url: `/notifications/devices/${id}/`,
+        method: "DELETE",
+      }),
   },
 };

@@ -305,3 +305,67 @@ export type NotificationDevice = {
   created_at: string
   updated_at: string
 }
+
+export type NotificationEventType =
+  | "order_filled"
+  | "order_cancelled"
+  | "position_settled"
+  | "market_closed"
+  | "system"
+
+/**
+ * Event metadata attached to a notification and to the matching push message.
+ * FCM data values arrive as strings, so every field is optional and loosely
+ * typed; use the helpers in `lib/notifications.ts` to read them safely.
+ */
+export type NotificationData = {
+  notification_id?: string | number
+  event_type?: NotificationEventType
+  trade_id?: number
+  order_id?: number
+  side?: OrderSide
+  quantity?: number
+  original_quantity?: number
+  partial?: boolean
+  price?: number
+  price_decimal?: number
+  notional?: number
+  notional_decimal?: number
+  payout?: number
+  payout_decimal?: number
+  market_id?: number
+  market_slug?: string
+  market_title?: string
+  outcome_id?: number
+  outcome_name?: string
+  is_void?: boolean
+  won?: boolean
+  winning_outcome_id?: number
+  [key: string]: unknown
+}
+
+export type AppNotification = {
+  id: number
+  event_type: NotificationEventType
+  title: string
+  body: string
+  data: NotificationData
+  is_read: boolean
+  read_at: string | null
+  created_at: string
+}
+
+export type UnreadCount = {
+  unread_count: number
+}
+
+export type NotificationListParams = {
+  page?: number
+  unread?: boolean
+  event_type?: NotificationEventType
+}
+
+export type RegisterDevicePayload = {
+  token: string
+  platform: "web" | "android" | "ios"
+}

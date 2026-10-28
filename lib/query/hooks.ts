@@ -17,6 +17,7 @@ import {
 } from "@/lib/api/endpoints"
 import type {
   Market,
+  NotificationEventType,
   OnboardingPayload,
   PriceHistoryRange,
   SubmitOrderPayload,
@@ -65,7 +66,16 @@ export function useLogout() {
   const router = useRouter()
 
   return useMutation({
-    mutationFn: api.auth.logout,
+    mutationFn: async () => {
+      // Stop push delivery to this browser before the session disappears.
+      try {
+        const { deactivatePushDevice } = await import("@/lib/push-notifications")
+        await deactivatePushDevice()
+      } catch {
+        // Never block sign-out on push cleanup.
+      }
+      return api.auth.logout()
+    },
     onSettled: () => {
       queryClient.clear()
       router.replace("/")
@@ -310,5 +320,62 @@ export function useCancelOrder() {
     onSuccess: () => {
       invalidate()
     },
+  })
+}
+
+export type NotificationFilters = {
+  unread?: boolean
+  event_type?: NotificationEventType
+}
+
+function useInvalidateNotifications() {
+  const queryClient = useQueryClient()
+
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ["notifications"] })
+  }
+}
+
+export function useNotifications(
+  filters: NotificationFilters = {},
+  enabled = true
+) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.notifications(filters),
+    queryFn: ({ pageParam }) =>
+      api.notifications.list({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => nextPageNumber(lastPage.next),
+    enabled,
+    refetchInterval: 60_000,
+  })
+}
+
+export function useUnreadNotificationCount(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.unreadCount,
+    queryFn: api.notifications.unreadCount,
+    enabled,
+    staleTime: 15_000,
+    refetchInterval: 60_000,
+  })
+}
+
+export function useMarkNotificationRead() {
+  const invalidate = useInvalidateNotifications()
+
+  return useMutation({
+    mutationFn: (id: number) => api.notifications.markRead(id),
+    onSuccess: invalidate,
+  })
+}
+
+export function useMarkAllNotificationsRead() {
+  const invalidate = useInvalidateNotifications()
+
+  return useMutation({
+    mutationFn: (eventType?: NotificationEventType) =>
+      api.notifications.markAllRead(eventType ? { event_type: eventType } : {}),
+    onSuccess: invalidate,
   })
 }
