@@ -213,7 +213,7 @@ export function LandingView() {
               />
             ) : null}
             {markets.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-full overflow-hidden">
                 {markets.map((market) => (
                   <MarketCard key={market.id} market={market} />
                 ))}
