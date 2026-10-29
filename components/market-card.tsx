@@ -27,9 +27,9 @@ export function MarketCard({ market }: { market: Market }) {
   return (
     <Link
       href={`/markets/${encodeURIComponent(market.slug)}`}
-      className="group col-span-1 flex h-full flex-col rounded-xl border border-border/80 bg-card p-5 transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0/0.25)] focus-visible:-translate-y-0.5"
+      className="group max-w-full col-span-1 flex h-full flex-col rounded-xl border border-border/80 bg-card p-5 transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0/0.25)] focus-visible:-translate-y-0.5"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="w-full flex items-center justify-between gap-3">
         <span className="truncate text-xs font-medium text-muted-foreground">
           {market.category.name}
         </span>
@@ -69,7 +69,7 @@ export function MarketCard({ market }: { market: Market }) {
           visibleOutcomes.map((outcome) => {
             const percent = outcome.current_price === null ? 0 : outcome.current_price / 100
             return (
-              <div key={outcome.id}>
+              <div className="w-full max-w-full" key={outcome.id}>
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="truncate text-sm text-muted-foreground">
                     {outcome.name}
