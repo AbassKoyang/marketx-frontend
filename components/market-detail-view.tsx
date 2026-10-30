@@ -449,7 +449,7 @@ export function MarketDetailView({ slug }: { slug: string }) {
           </span>
         </div>
 
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 max-w-full overflow-x-hidden">
           {activeOutcomes.map((outcome) => {
             const selected = outcome.id === selectedOutcome.id
             const won = outcome.id === winningOutcomeId
@@ -460,7 +460,7 @@ export function MarketDetailView({ slug }: { slug: string }) {
                 onClick={() => setSelectedOutcomeId(outcome.id)}
                 aria-pressed={selected}
                 className={cn(
-                  "flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 text-left transition-[border-color,background-color,box-shadow] duration-150",
+                  "col-span-1 flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 text-left transition-[border-color,background-color,box-shadow] duration-150",
                   selected
                     ? "border-foreground/30 bg-foreground/[0.03] shadow-[0_1px_2px_rgb(0_0_0/0.03)]"
                     : "border-border/80 bg-card hover:border-foreground/20"
