@@ -23,7 +23,7 @@ export function MobileTabBar() {
   const pathname = usePathname()
   const { isAuthenticated } = useAuth()
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || (!pathname.startsWith("/markets") && !pathname.startsWith("/portfolio") && !pathname.startsWith("/search"))) {
     return null
   }
 
@@ -31,7 +31,7 @@ return (
     <div className="lg:hidden fixed bottom-6 left-0 right-0 z-50 flex justify-center px-6">
       <nav className="flex items-center p-2 bg-background/90 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-[2rem] w-full max-w-md">
         {tabs.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname.startsWith(item.href)
           const Icon = item.icon
 
           return (

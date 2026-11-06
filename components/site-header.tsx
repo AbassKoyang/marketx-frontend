@@ -402,7 +402,7 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="ms-auto flex items-center gap-2">
+        <div className="ms-auto flex items-center gap-1 md:gap-2">
           <HeaderSearch />
           <Button
             variant="ghost"
