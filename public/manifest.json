@@ -2,7 +2,7 @@
     "name": "MarketX",
     "short_name": "MarketX",
     "description": "A quieter prediction market for the events you follow. Put your money where your mouth is.",
-    "start_url": "/",
+    "start_url": "/markets",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#101010",

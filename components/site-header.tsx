@@ -205,6 +205,7 @@ function AccountMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        className={"hidden lg:inline-flex"}
         render={
           <button
             type="button"
@@ -275,7 +276,16 @@ function MobileMenu() {
           />
         }
       >
-        <HugeiconsIcon icon={Menu01Icon} strokeWidth={1.7} />
+        {isAuthenticated && user ? (
+          <Avatar size="default" className="size-7">
+          {user.avatar ? <AvatarImage src={user.avatar} alt="" /> : null}
+          <AvatarFallback className="text-xs font-medium">
+            {initials(user.first_name, user.last_name, user.username)}
+          </AvatarFallback>
+        </Avatar>
+        ) : (
+            <HugeiconsIcon icon={Menu01Icon} strokeWidth={1.7} />
+        )}
       </SheetTrigger>
       <SheetContent side="right" className="w-[86%] p-0">
         <SheetHeader className="border-b border-border/70 p-5 pb-6">
